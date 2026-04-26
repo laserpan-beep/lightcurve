@@ -49,15 +49,28 @@ lc_pipe.bin(time_bin_size=15).plot(ax=ax_bin, label='pipeline', linewidth=0.5, c
 lc_thre.bin(time_bin_size=15).plot(ax=ax_bin, label='threshold', linewidth=0.5, color='blue')
 lc_cust.bin(time_bin_size=15).plot(ax=ax_bin, label='custom threshold', linewidth=0.5, color='green')
 
+
+k=0
+
+#Будем вводить легенду графика через label и переменную k
+label=''
 #Cоздание пары i=0 lc=lc_pipe,...
 for i, lc in enumerate(lcs):
     period = lc.to_periodogram(method="Lombscargle", minimum_period=1, maximum_period=20)
     MAX_period = period.period_at_max_power
-
-    period.plot(ax=axes_period[i], color="red", label=('exptime=120', f'MAX period={MAX_period:.4f}'))
+    if k==0:
+        label='pipeline'
+    if k==1:
+        label='threshold'
+    if k==2:
+        label='custom threshold'
+    period.plot(ax=axes_period[i], color="red", label=(f'{label}','exptime=120', f'MAX period={MAX_period:.4f}'))
 
     lc_folded = lc.fold(period=MAX_period)
 
-    lc_folded.plot(ax=axes_fold[i], color='purple', label='exptime=120')
+    lc_folded.plot(ax=axes_fold[i], color='purple', label=(f'{label}','exptime=120'))
+    k+=1
+
+plt.tight_layout()
 
 plt.show()
