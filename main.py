@@ -15,6 +15,8 @@ for i in range(3):
 
 
 fig, axes = plt.subplots(3,4, figsize=(20,10))
+fig.suptitle('HAT-P 24')
+
 k=20
 #Прохождение по lcs парой, то есть i=0 => lc=search_result_33_20,...
 for i,lc in enumerate(lcs):
@@ -23,25 +25,26 @@ for i,lc in enumerate(lcs):
         k=600
     if k==20 and i!=0:
         k=120
-    lc.plot(ax=axes[i,0],color="blue",label=f'exptime={k}')
+    lc.plot(ax=axes[i,0],color="blue",label=f'exptime={k}',title='HAT-P 24')
 
-    lc_sigma=lc.remove_nans().remove_outliers(sigma=5)
+    lc_sigma=lc.remove_outliers(sigma_lower=float('inf'),sigma_upper=3)
     lc_sigma.plot(ax=axes[i,1],color="green",label=f'exptime={k}')
 
     #Нахождение периода методом Ломб-Скаргла
-    period=lc_sigma.to_periodogram(method="Lombscargle",minimum_period=1,maximum_period=20)
+    period=lc_sigma.to_periodogram(method="bls",minimum_period=1,maximum_period=5)
     MAX_period=period.period_at_max_power
-    period.plot(ax=axes[i,2],color="red",label=(f'exptime={k}', f'MAX period={MAX_period:.4f} '))
+
+    epoch = period.transit_time_at_max_power
+
+    period.plot(ax=axes[i,2],color="red",label=(f'exptime={k}', f'MAX period={MAX_period.value:.4f}'),title='HAT-P 24')
 
     #Сворачивание кривых блеса с найденным МАКСимальным периодом
-    lc_folded=lc_sigma.fold(period=MAX_period)
+    lc_folded=lc_sigma.fold(period=MAX_period,epoch_time=epoch,normalize_phase=True)
+
     lc_folded.plot(ax=axes[i,3],color='purple',label=f'exptime={k}')
+
+
 
 plt.tight_layout()
 
 plt.show()
-
-
-
-
-
