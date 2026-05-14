@@ -1,5 +1,6 @@
 import lightkurve as lk
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.gridspec import GridSpec
 
 search_result_33_120 = lk.search_targetpixelfile('HAT-P 24', exptime=120, sector=33)
@@ -7,7 +8,9 @@ search_result_33_120 = lk.search_targetpixelfile('HAT-P 24', exptime=120, sector
 tpf = search_result_33_120.download()
 
 #Создание свой маски
-custom_threshold_mask = tpf.create_threshold_mask(threshold=2)
+custom_threshold_mask = np.zeros(tpf[0].shape[1:],dtype=bool)
+custom_threshold_mask[4:7,5:7]=True
+
 
 #Инверсируем (~) маску порога, чтобы найти фон
 bias = ~tpf.create_threshold_mask(threshold=0.1)
@@ -37,6 +40,7 @@ lcs = [lc_pipe, lc_thre, lc_cust]
 #Создание графика
 fig = plt.figure(figsize=(18, 10))
 fig.suptitle('HAT-P 24')
+
 gs = GridSpec(3, 6, figure=fig, hspace=0.4, wspace=0.4)
 
 ax_raw = fig.add_subplot(gs[0, 0:3])
@@ -47,12 +51,18 @@ axes_fold = [fig.add_subplot(gs[2, 0:2]), fig.add_subplot(gs[2, 2:4]), fig.add_s
 
 #Отрисовка верхних графиков
 lc_pipe.plot(ax=ax_raw, label='pipeline', linewidth=0.5, color='red')
+plt.legend(loc="best", fontsize=3, shadow=True, edgecolor='white')
 lc_thre.plot(ax=ax_raw, label='threshold', linewidth=0.5, color='blue')
+plt.legend(loc="best", fontsize=3, shadow=True, edgecolor='white')
 lc_cust.plot(ax=ax_raw, label='custom threshold', linewidth=0.5, color='green')
+plt.legend(loc="best", fontsize=3, shadow=True, edgecolor='white')
 
 lc_pipe.plot(ax=ax_bin, label='pipeline', linewidth=0.5, color='red')
+plt.legend(loc="best", fontsize=3, shadow=True, edgecolor='white')
 lc_thre.plot(ax=ax_bin, label='threshold', linewidth=0.5, color='blue')
+plt.legend(loc="best", fontsize=3, shadow=True, edgecolor='white')
 lc_cust.plot(ax=ax_bin, label='custom threshold', linewidth=0.5, color='green')
+plt.legend(loc="best", fontsize=3, shadow=True, edgecolor='white')
 
 
 k=0
@@ -62,6 +72,7 @@ label=''
 #Cоздание пары i=0 lc=lc_pipe,...
 for i, lc in enumerate(lcs):
     period = lc.to_periodogram(method="bls", minimum_period=1, maximum_period=5)
+
     MAX_period = period.period_at_max_power
     epoch=period.transit_time_at_max_power
     if k==0:
@@ -71,6 +82,8 @@ for i, lc in enumerate(lcs):
     if k==2:
         label='custom threshold'
     period.plot(ax=axes_period[i], color="red", label=(f'{label}','exptime=120', f'MAX period={MAX_period.value:.4f}'))
+    plt.legend(loc="best", fontsize=15, shadow=True, edgecolor='white')
+
 
     lc_folded = lc.fold(period=MAX_period,epoch_time=epoch,normalize_phase=True)
 
@@ -79,6 +92,5 @@ for i, lc in enumerate(lcs):
     axes_fold[i].set_title('Phase Curve')
     k+=1
 
-plt.tight_layout()
 
 plt.show()
